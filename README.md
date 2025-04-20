@@ -140,3 +140,7 @@ which spectre
 ## 🧑‍💻 Author
 
 Luis Vásquez
+
+# TODO:
+- change timestamps format in logs
+- deprecate stack by tree in order to have traceability of changes

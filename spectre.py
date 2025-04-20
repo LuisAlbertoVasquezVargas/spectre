@@ -5,13 +5,21 @@ import os
 import sys
 import uuid
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from logger import Logger
 
 REPO_DIR = ".vcs_spectre"
 STACK_FILE = os.path.join(REPO_DIR, "stack.json")
 PTR_FILE = os.path.join(REPO_DIR, "PTR")
 TRACKED_FILE = "main.txt"
+
+def create_snapshot(state: str, comment: str) -> dict:
+    return {
+        "id": str(uuid.uuid4()),
+        "date": datetime.now(timezone(timedelta(hours=-5))).strftime("%d %b %Y %I:%M:%S %p"),
+        "comment": comment,
+        "state": state
+    }
 
 def ensure_repo():
     if not os.path.isdir(REPO_DIR):
@@ -50,7 +58,7 @@ def init():
     with open(TRACKED_FILE, "w") as f:
         f.write("")
 
-    first_snapshot = {"id": str(uuid.uuid4()), "date": datetime.now(timezone.utc).isoformat(), "comment": "Initial empty state", "state": ""}
+    first_snapshot = create_snapshot("", "Initial empty state")
     write_stack([first_snapshot])
     write_ptr(first_snapshot["id"])
     Logger.info("Initialized empty Spectre repository.")
@@ -61,8 +69,7 @@ def save():  # Saving always at the end as a stack
     with open(TRACKED_FILE, "r") as f:
         state = f.read()
 
-    new_snapshot = {"id": str(uuid.uuid4()), "date": datetime.now(timezone.utc).isoformat(), "comment": comment, "state": state}
-
+    new_snapshot = create_snapshot(state, comment)
     stack = read_stack()
     stack.append(new_snapshot)
     write_stack(stack)
