@@ -1,12 +1,10 @@
 # spectre.py
-#!/usr/bin/env python3
 
 import os
 import sys
 import uuid
 import json
 from datetime import datetime, timezone
-
 from logger import Logger
 
 REPO_DIR = ".vcs_spectre"
@@ -56,7 +54,7 @@ def init():
     write_ptr(first_snapshot["id"])
     Logger.info("Initialized empty Spectre repository.")
 
-def save():
+def save():  # Saving always at the end as a stack
     ensure_repo()
     comment = input("Comment for this snapshot: ")
     with open(TRACKED_FILE, "r") as f:
