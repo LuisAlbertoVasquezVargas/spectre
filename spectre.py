@@ -1,3 +1,4 @@
+# spectre.py
 #!/usr/bin/env python3
 
 import os
@@ -6,6 +7,8 @@ import uuid
 import json
 from datetime import datetime, timezone
 
+from logger import Logger
+
 REPO_DIR = ".vcs_spectre"
 STACK_FILE = os.path.join(REPO_DIR, "stack.json")
 PTR_FILE = os.path.join(REPO_DIR, "PTR")
@@ -13,7 +16,7 @@ TRACKED_FILE = "main.txt"
 
 def ensure_repo():
     if not os.path.isdir(REPO_DIR):
-        print("Spectre repository not initialized.")
+        Logger.error("Spectre repository not initialized.")
         sys.exit(1)
 
 def write_stack(stack):
@@ -38,10 +41,10 @@ def write_ptr(snapshot_id):
 
 def init():
     if os.path.exists(REPO_DIR):
-        print("Spectre repository already exists.")
+        Logger.error("Spectre repository already exists.")
         return
     if os.path.exists(TRACKED_FILE):
-        print("main.txt already exists. Cannot initialize.")
+        Logger.error("main.txt already exists. Cannot initialize.")
         return
 
     os.makedirs(REPO_DIR)
@@ -51,7 +54,7 @@ def init():
     first_snapshot = {"id": str(uuid.uuid4()), "date": datetime.now(timezone.utc).isoformat(), "comment": "Initial empty state", "state": ""}
     write_stack([first_snapshot])
     write_ptr(first_snapshot["id"])
-    print("Initialized empty Spectre repository.")
+    Logger.info("Initialized empty Spectre repository.")
 
 def save():
     ensure_repo()
@@ -65,31 +68,30 @@ def save():
     stack.append(new_snapshot)
     write_stack(stack)
     write_ptr(new_snapshot["id"])
-    print(f"Saved snapshot {new_snapshot['id']}")
+    Logger.info(f"Saved snapshot {new_snapshot['id']}")
 
 def log():
     ensure_repo()
     stack = read_stack()
     current = read_ptr()
     for snap in stack:
-        marker = " ← PTR" if snap["id"] == current else ""
-        print(f"{snap['id']} [{snap['date']}] - {snap['comment']}{marker}")
+        Logger.snapshot(snap, is_current=(snap["id"] == current))
 
 def switch(target_id):
     ensure_repo()
     stack = read_stack()
     match = next((s for s in stack if s["id"] == target_id), None)
     if not match:
-        print("No snapshot with that ID.")
+        Logger.error("No snapshot with that ID.")
         return
     with open(TRACKED_FILE, "w") as f:
         f.write(match["state"])
     write_ptr(match["id"])
-    print(f"Switched to snapshot {target_id}")
+    Logger.info(f"Switched to snapshot {target_id}")
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: spectre [init | save | log | switch <id>]")
+        Logger.plain("Usage: spectre [init | save | log | switch <id>]")
         return
 
     cmd = sys.argv[1]
@@ -101,11 +103,11 @@ def main():
         log()
     elif cmd == "switch":
         if len(sys.argv) < 3:
-            print("Usage: spectre switch <id>")
+            Logger.plain("Usage: spectre switch <id>")
             return
         switch(sys.argv[2])
     else:
-        print("Unknown command")
+        Logger.error("Unknown command")
 
 if __name__ == "__main__":
     main()
