@@ -1,2 +1,3 @@
 .vcs_spectre
 /venv
+__pycache__/

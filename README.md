@@ -46,41 +46,35 @@ Each snapshot entry contains:
 ### 1. Initialize a new repo
 
 ```bash
-python spectre.py init
+spectre init
 ```
 
 - Fails if `main.txt` already exists
 - Creates an empty `main.txt` and saves it as the first snapshot
 
----
-
 ### 2. Save a snapshot
 
 ```bash
-python spectre.py save
+spectre save
 ```
 
 - Prompts for a comment
 - Appends the full state of `main.txt` to the stack
 - Updates `PTR` to the new snapshot
 
----
-
 ### 3. View history
 
 ```bash
-python spectre.py log
+spectre log
 ```
 
 - Shows all snapshot IDs, dates, and comments
 - Highlights the current `PTR`
 
----
-
 ### 4. Switch to a previous snapshot
 
 ```bash
-python spectre.py switch <snapshot_id>
+spectre switch <snapshot_id>
 ```
 
 - Overwrites `main.txt` with the snapshot’s state
@@ -91,15 +85,37 @@ python spectre.py switch <snapshot_id>
 ## 🧪 Example
 
 ```bash
-python spectre.py init
+spectre init
 # => Initialized empty Spectre repository.
 
 echo "hello world" > main.txt
-python spectre.py save
+spectre save
 # => Comment for this snapshot: initial greeting
 
-python spectre.py log
+spectre log
 # => [snapshot_id] [timestamp] - initial greeting ← PTR
+```
+
+---
+
+## 🛠 CLI Setup (for global use)
+
+Run this after cloning the project:
+
+```bash
+chmod +x ~/projects/spectre/spectre.py
+mkdir -p ~/bin
+ln -s ~/projects/spectre/spectre.py ~/bin/spectre
+export PATH="$HOME/bin:$PATH"   # Needed only per terminal session
+```
+
+You can now run `spectre` like a real CLI tool from any directory.
+
+To confirm:
+
+```bash
+which spectre
+# Should show: /home/youruser/bin/spectre
 ```
 
 ---
@@ -107,7 +123,7 @@ python spectre.py log
 ## 🛡 Requirements
 
 - Python 3.8+
-- Works well in Unix-like systems (tested in WSL2, Ubuntu 22.04)
+- Tested in WSL2 (Ubuntu 22.04)
 
 ---
 
@@ -124,6 +140,3 @@ python spectre.py log
 ## 🧑‍💻 Author
 
 Luis Vásquez
-
----
-
