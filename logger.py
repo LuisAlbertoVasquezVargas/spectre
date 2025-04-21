@@ -9,12 +9,12 @@ class Logger:
     BOLD = "\033[1m"
 
     @classmethod
-    def snapshot(cls, snapshot, is_current=False):
-        id_fmt = f"{cls.GREEN}{snapshot['id']}{cls.RESET}" if is_current else snapshot['id']
-        date_fmt = f"{cls.DIM}[{snapshot['date']}] {cls.RESET}"
-        comment_fmt = f"{cls.CYAN}{snapshot['comment']}{cls.RESET}"
-        ptr_marker = f"{cls.YELLOW}← CURRENT{cls.RESET}" if is_current else ""
-        print(f"{id_fmt} {date_fmt}- {comment_fmt} {ptr_marker}")
+    def snapshot(cls, snapshot, is_current=False, prefix=""):
+        id_short = snapshot['id'][:8]
+        date = snapshot['date']
+        comment = snapshot['comment']
+        marker = f"{cls.YELLOW}← CURRENT{cls.RESET}" if is_current else ""
+        print(f"{prefix}{cls.GREEN}{id_short}{cls.RESET} {cls.DIM}[{date}]{cls.RESET} - {cls.CYAN}{comment}{cls.RESET} {marker}")
 
     @classmethod
     def info(cls, message):

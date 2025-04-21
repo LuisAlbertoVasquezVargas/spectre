@@ -82,9 +82,31 @@ def save():
 def log():
     ensure_repo()
     tree = read_tree()
-    current = read_current()
+    current_id = read_current()
+
+    snapshot_map = {s["id"]: s for s in tree}
+    children_map = {}
     for snap in tree:
-        Logger.snapshot(snap, is_current=(snap["id"] == current))
+        children_map.setdefault(snap.get("parent"), []).append(snap)
+
+    def render(node_id, levels=0, parent_connector=''):
+        node = snapshot_map[node_id]
+        is_current = node_id == current_id
+        children = children_map.get(node_id, [])
+        prefix = ('|' * (levels - 1) + parent_connector) if parent_connector != '' else ('|' * levels)
+        Logger.snapshot(node, is_current=is_current, prefix=prefix)
+        if len(children) == 0:
+            return
+        elif len(children) == 1:
+            Logger.plain('|' * (levels - 1) + '↓')
+            render(children[0]["id"], levels)
+        elif len(children) > 1:
+            for i, child in enumerate(children):
+                connector = "├─" if i < len(children) - 1 else "└─"
+                render(child["id"], levels + 1, parent_connector=connector)
+
+    for root in children_map.get(None, []):
+        render(root["id"])
 
 def switch(target_id):
     ensure_repo()
