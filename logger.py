@@ -13,7 +13,7 @@ class Logger:
         id_fmt = f"{cls.GREEN}{snapshot['id']}{cls.RESET}" if is_current else snapshot['id']
         date_fmt = f"{cls.DIM}[{snapshot['date']}] {cls.RESET}"
         comment_fmt = f"{cls.CYAN}{snapshot['comment']}{cls.RESET}"
-        ptr_marker = f"{cls.YELLOW}← PTR{cls.RESET}" if is_current else ""
+        ptr_marker = f"{cls.YELLOW}← CURRENT{cls.RESET}" if is_current else ""
         print(f"{id_fmt} {date_fmt}- {comment_fmt} {ptr_marker}")
 
     @classmethod

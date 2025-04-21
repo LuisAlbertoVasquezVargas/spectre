@@ -9,16 +9,17 @@ from datetime import datetime, timezone, timedelta
 from logger import Logger
 
 REPO_DIR = ".vcs_spectre"
-STACK_FILE = os.path.join(REPO_DIR, "stack.json")
-PTR_FILE = os.path.join(REPO_DIR, "PTR")
+SNAPSHOT_FILE = os.path.join(REPO_DIR, "tree.json")
+CURRENT_FILE = os.path.join(REPO_DIR, "CURRENT")
 TRACKED_FILE = "main.txt"
 
-def create_snapshot(state: str, comment: str) -> dict:
+def create_snapshot(state: str, comment: str, parent_id: str = None) -> dict:
     return {
         "id": str(uuid.uuid4()),
         "date": datetime.now(timezone(timedelta(hours=-5))).strftime("%d %b %Y %I:%M:%S %p"),
         "comment": comment,
-        "state": state
+        "state": state,
+        "parent": parent_id
     }
 
 def ensure_repo():
@@ -26,24 +27,24 @@ def ensure_repo():
         Logger.error("Spectre repository not initialized.")
         sys.exit(1)
 
-def write_stack(stack):
-    with open(STACK_FILE, "w") as f:
-        json.dump(stack, f, indent=2)
+def write_tree(tree):
+    with open(SNAPSHOT_FILE, "w") as f:
+        json.dump(tree, f, indent=2)
 
-def read_stack():
-    if not os.path.exists(STACK_FILE):
+def read_tree():
+    if not os.path.exists(SNAPSHOT_FILE):
         return []
-    with open(STACK_FILE) as f:
+    with open(SNAPSHOT_FILE) as f:
         return json.load(f)
 
-def read_ptr():
-    if not os.path.exists(PTR_FILE):
+def read_current():
+    if not os.path.exists(CURRENT_FILE):
         return None
-    with open(PTR_FILE) as f:
+    with open(CURRENT_FILE) as f:
         return f.read().strip()
 
-def write_ptr(snapshot_id):
-    with open(PTR_FILE, "w") as f:
+def write_current(snapshot_id):
+    with open(CURRENT_FILE, "w") as f:
         f.write(snapshot_id)
 
 def init():
@@ -58,41 +59,43 @@ def init():
     with open(TRACKED_FILE, "w") as f:
         f.write("")
 
-    first_snapshot = create_snapshot("", "Initial empty state")
-    write_stack([first_snapshot])
-    write_ptr(first_snapshot["id"])
+    root = create_snapshot("", "Initial empty state", parent_id=None)
+    write_tree([root])
+    write_current(root["id"])
     Logger.info("Initialized empty Spectre repository.")
 
-def save():  # Saving always at the end as a stack
+def save():
     ensure_repo()
     comment = input("Comment for this snapshot: ")
     with open(TRACKED_FILE, "r") as f:
         state = f.read()
 
-    new_snapshot = create_snapshot(state, comment)
-    stack = read_stack()
-    stack.append(new_snapshot)
-    write_stack(stack)
-    write_ptr(new_snapshot["id"])
+    parent_id = read_current()
+    new_snapshot = create_snapshot(state, comment, parent_id=parent_id)
+
+    tree = read_tree()
+    tree.append(new_snapshot)
+    write_tree(tree)
+    write_current(new_snapshot["id"])
     Logger.info(f"Saved snapshot {new_snapshot['id']}")
 
 def log():
     ensure_repo()
-    stack = read_stack()
-    current = read_ptr()
-    for snap in stack:
+    tree = read_tree()
+    current = read_current()
+    for snap in tree:
         Logger.snapshot(snap, is_current=(snap["id"] == current))
 
 def switch(target_id):
     ensure_repo()
-    stack = read_stack()
-    match = next((s for s in stack if s["id"] == target_id), None)
+    tree = read_tree()
+    match = next((s for s in tree if s["id"] == target_id), None)
     if not match:
         Logger.error("No snapshot with that ID.")
         return
     with open(TRACKED_FILE, "w") as f:
         f.write(match["state"])
-    write_ptr(match["id"])
+    write_current(match["id"])
     Logger.info(f"Switched to snapshot {target_id}")
 
 def main():
